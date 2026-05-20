@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEET 50 MCQ Practice Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+        .header p { opacity: 0.9; font-size: 0.95rem; }
+        .score-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .score-item {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .score-item.correct { background: rgba(76,175,80,0.3); }
+        .score-item.wrong { background: rgba(244,67,54,0.3); }
+        .score-item.total { background: rgba(255,193,7,0.3); }
+        .score-item.unattempted { background: rgba(158,158,158,0.3); }
+
+        .container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+
+        .subject-filter {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .subject-filter button {
+            padding: 8px 20px;
+            border: 2px solid #1a73e8;
+            background: white;
+            color: #1a73e8;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .subject-filter button.active,
+        .subject-filter button:hover {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+        .question-card.answered-correct {
+            border-left: 5px solid #4caf50;
+        }
+        .question-card.answered-wrong {
+            border-left: 5px solid #f44336;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .question-number {
+            font-weight: 700;
+            color: #1a73e8;
+            font-size: 1rem;
+        }
+        .subject-badge {
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .subject-badge.physics { background: #e3f2fd; color: #1565c0; }
+        .subject-badge.chemistry { background: #fce4ec; color: #c62828; }
+        .subject-badge.biology { background: #e8f5e9; color: #2e7d32; }
+
+        .question-text {
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #222;
+        }
+        .marks-badge {
+            font-size: 0.8rem;
+            color: #777;
+            font-weight: 400;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        @media (max-width: 600px) {
+            .options-grid { grid-template-columns: 1fr; }
+        }
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            text-align: left;
+        }
+        .option-btn:hover:not(.disabled) {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+        .option-btn .option-label {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            background: #e0e0e0;
+            color: #555;
+            flex-shrink: 0;
+        }
+        .option-btn.selected {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+        .option-btn.selected .option-label {
+            background: #1a73e8;
+            color: white;
+        }
+        .option-btn.correct-answer {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        .option-btn.correct-answer .option-label {
+            background: #4caf50;
+            color: white;
+        }
+        .option-btn.wrong-answer {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        .option-btn.wrong-answer .option-label {
+            background: #f44336;
+            color: white;
+        }
+        .option-btn.disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+
+        .explanation {
+            margin-top: 14px;
+            padding: 14px;
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 6px;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .explanation.show { display: block; }
+        .explanation strong { color: #f57f17; }
+
+        .result-icon {
+            font-size: 1.2rem;
+            margin-left: 8px;
+        }
+
+        .actions {
+            text-align: center;
+            margin: 30px 0 40px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26,115,232,0.4);
+        }
+        .btn-secondary {
+            padding: 14px 40px;
+            background: white;
+            color: #1a73e8;
+            border: 2px solid #1a73e8;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: #e8f0fe;
+        }
+
+        /* Results Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 36px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+        }
+        .modal h2 { font-size: 1.6rem; margin-bottom: 8px; color: #1a73e8; }
+        .modal .subtitle { color: #777; margin-bottom: 24px; }
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .result-box {
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .result-box .value { font-size: 2rem; font-weight: 700; }
+        .result-box .label { font-size: 0.85rem; color: #555; margin-top: 4px; }
+        .result-box.green { background: #e8f5e9; color: #2e7d32; }
+        .result-box.red { background: #ffebee; color: #c62828; }
+        .result-box.blue { background: #e3f2fd; color: #1565c0; }
+        .result-box.amber { background: #fff8e1; color: #f57f17; }
+        .result-box.total-score { grid-column: 1 / -1; background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; }
+        .result-box.total-score .value { font-size: 2.8rem; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .progress-bar-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #4caf50;
+            border-radius: 10px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>NEET 50 MCQ Practice Test</h1>
+    <p>Physics &bull; Chemistry &bull; Biology &mdash; 4 marks per question | -1 for wrong | 0 for unattempted</p>
+    <div class="score-bar">
+        <span class="score-item correct" id="scoreCorrect">Correct: 0</span>
+        <span class="score-item wrong" id="scoreWrong">Wrong: 0</span>
+        <span class="score-item unattempted" id="scoreUnattempted">Unattempted: 50</span>
+        <span class="score-item total" id="scoreTotal">Score: 0 / 200</span>
+    </div>
+    <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="subject-filter">
+        <button class="active" onclick="filterSubject('All')">All (50)</button>
+        <button onclick="filterSubject('Physics')">Physics</button>
+        <button onclick="filterSubject('Chemistry')">Chemistry</button>
+        <button onclick="filterSubject('Biology')">Biology</button>
+    </div>
+
+    <div id="questionsContainer"></div>
+
+    <div class="actions">
+        <button class="btn-primary" onclick="submitTest()">Submit Test</button>
+        <button class="btn-secondary" onclick="resetTest()">Reset Test</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="modal">
+        <h2>Test Results</h2>
+        <p class="subtitle">NEET 50 MCQ Practice Test</p>
+        <div class="result-grid">
+            <div class="result-box total-score">
+                <div class="value" id="modalTotal">0</div>
+                <div class="label">Total Score (out of 200)</div>
+            </div>
+            <div class="result-box green">
+                <div class="value" id="modalCorrect">0</div>
+                <div class="label">Correct (+4 each)</div>
+            </div>
+            <div class="result-box red">
+                <div class="value" id="modalWrong">0</div>
+                <div class="label">Wrong (-1 each)</div>
+            </div>
+            <div class="result-box blue">
+                <div class="value" id="modalAttempted">0</div>
+                <div class="label">Attempted</div>
+            </div>
+            <div class="result-box amber">
+                <div class="value" id="modalUnattempted">0</div>
+                <div class="label">Unattempted (0)</div>
+            </div>
+        </div>
+        <button class="btn-primary" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    {q:1, subject:"Physics", question:"A body of mass 2 kg moves in a circle of radius 1 m with constant speed 4 m/s. The centripetal force is:", a:"8 N", b:"16 N", c:"32 N", d:"4 N", answer:"B", explanation:"Centripetal force F = mv²/r = 2×16/1 = 32 N."},
+    {q:2, subject:"Physics", question:"The dimensional formula of Planck\u2019s constant is:", a:"ML\u00B2T\u207B\u00B9", b:"ML\u00B2T\u207B\u00B2", c:"MLT\u207B\u00B9", d:"MLT\u207B\u00B2", answer:"A", explanation:"h = Energy×time → (ML²T⁻²)×T = ML²T⁻¹."},
+    {q:3, subject:"Physics", question:"Two resistors 4Ω and 6Ω are in parallel. Equivalent resistance:", a:"2.4Ω", b:"10Ω", c:"5Ω", d:"1Ω", answer:"A", explanation:"1/R = 1/4 + 1/6 = 5/12 → R = 12/5 = 2.4Ω."},
+    {q:4, subject:"Physics", question:"Escape velocity from Earth depends on:", a:"Mass only", b:"Radius only", c:"Mass and radius", d:"Neither", answer:"C", explanation:"v = √(2GM/R) depends on both M and R."},
+    {q:5, subject:"Physics", question:"Young\u2019s modulus is the ratio of:", a:"Stress/Strain", b:"Strain/Stress", c:"Force/Area", d:"Pressure/Strain", answer:"A", explanation:"Definition of Young's modulus: stress divided by strain."},
+    {q:6, subject:"Physics", question:"In photoelectric effect, kinetic energy depends on:", a:"Intensity", b:"Frequency", c:"Both", d:"Distance", answer:"B", explanation:"KE depends on frequency, not intensity."},
+    {q:7, subject:"Physics", question:"Magnetic field at center of circular loop carrying current I:", a:"μ₀I/2R", b:"μ₀I/R", c:"2μ₀I/R", d:"Zero", answer:"A", explanation:"Standard formula B = μ₀I/2R."},
+    {q:8, subject:"Physics", question:"A convex lens of focal length 20 cm forms image at 60 cm. Object distance:", a:"30 cm", b:"15 cm", c:"20 cm", d:"10 cm", answer:"B", explanation:"Using lens formula 1/f = 1/v - 1/u gives u = -15 cm."},
+    {q:9, subject:"Physics", question:"SI unit of electric flux:", a:"Nm²/C", b:"NC/m²", c:"Volt", d:"Tesla", answer:"A", explanation:"Electric flux unit is Nm²/C."},
+    {q:10, subject:"Physics", question:"Work done in moving charge in equipotential surface:", a:"Maximum", b:"Minimum", c:"Zero", d:"Infinite", answer:"C", explanation:"No potential difference → no work."},
+    {q:11, subject:"Chemistry", question:"Which is strongest acid?", a:"HClO", b:"HClO₂", c:"HClO₃", d:"HClO₄", answer:"D", explanation:"Acid strength increases with oxidation state of Cl."},
+    {q:12, subject:"Chemistry", question:"Hybridization of carbon in ethyne:", a:"sp³", b:"sp²", c:"sp", d:"dsp²", answer:"C", explanation:"Triple bond → sp hybridization."},
+    {q:13, subject:"Chemistry", question:"Molarity depends on:", a:"Temperature", b:"Pressure", c:"Volume only", d:"None of these", answer:"A", explanation:"Volume changes with temperature affecting molarity."},
+    {q:14, subject:"Chemistry", question:"Which is paramagnetic?", a:"O₂", b:"N₂", c:"CO₂", d:"CH₄", answer:"A", explanation:"O₂ has unpaired electrons."},
+    {q:15, subject:"Chemistry", question:"Order of reaction is sum of:", a:"Coefficients", b:"Powers of concentration", c:"Moles", d:"Pressure", answer:"B", explanation:"Order defined by powers in rate law."},
+    {q:16, subject:"Chemistry", question:"pH of 10⁻³ M HCl:", a:"3", b:"11", c:"1", d:"7", answer:"A", explanation:"Strong acid, pH = -log(10⁻³) = 3."},
+    {q:17, subject:"Chemistry", question:"Which has highest boiling point?", a:"HF", b:"HCl", c:"HBr", d:"HI", answer:"A", explanation:"Strong H-bonding in HF."},
+    {q:18, subject:"Chemistry", question:"Electrophile is:", a:"Electron donor", b:"Electron pair acceptor", c:"Neutral species", d:"Free radical", answer:"B", explanation:"Electrophiles accept electron pairs."},
+    {q:19, subject:"Chemistry", question:"Oxidation number of Mn in KMnO₄:", a:"+7", b:"+2", c:"+4", d:"+6", answer:"A", explanation:"Standard oxidation state in permanganate."},
+    {q:20, subject:"Chemistry", question:"Which is aromatic?", a:"Cyclohexane", b:"Benzene", c:"Cyclobutane", d:"Propene", answer:"B", explanation:"Benzene follows Hückel's rule."},
+    {q:21, subject:"Biology", question:"Powerhouse of cell:", a:"Nucleus", b:"Mitochondria", c:"Ribosome", d:"Golgi", answer:"B", explanation:"Mitochondria generate ATP."},
+    {q:22, subject:"Biology", question:"DNA replication occurs in:", a:"G1", b:"S phase", c:"G2", d:"M phase", answer:"B", explanation:"S phase synthesizes DNA."},
+    {q:23, subject:"Biology", question:"Functional unit of kidney:", a:"Neuron", b:"Nephron", c:"Alveoli", d:"Glomerulus", answer:"B", explanation:"Nephron is unit of kidney."},
+    {q:24, subject:"Biology", question:"Photosynthesis occurs in:", a:"Mitochondria", b:"Chloroplast", c:"Nucleus", d:"Cytoplasm", answer:"B", explanation:"Chloroplast contains chlorophyll."},
+    {q:25, subject:"Biology", question:"Hormone regulating metabolism:", a:"Insulin", b:"Thyroxine", c:"Adrenaline", d:"Estrogen", answer:"B", explanation:"Thyroxine controls basal metabolism."},
+    {q:26, subject:"Biology", question:"Blood group universal donor:", a:"A", b:"B", c:"AB", d:"O", answer:"D", explanation:"O group lacks antigens."},
+    {q:27, subject:"Biology", question:"Genetic material in most organisms:", a:"RNA", b:"DNA", c:"Protein", d:"Lipid", answer:"B", explanation:"DNA stores genetic information."},
+    {q:28, subject:"Biology", question:"Site of protein synthesis:", a:"Ribosome", b:"Lysosome", c:"Golgi", d:"Nucleus", answer:"A", explanation:"Ribosomes translate mRNA."},
+    {q:29, subject:"Biology", question:"Which vitamin is water soluble?", a:"A", b:"D", c:"E", d:"C", answer:"D", explanation:"Vitamin C is water soluble."},
+    {q:30, subject:"Biology", question:"Plant hormone for cell elongation:", a:"Cytokinin", b:"Auxin", c:"Ethylene", d:"ABA", answer:"B", explanation:"Auxin promotes elongation."},
+    {q:31, subject:"Physics", question:"Time period of simple pendulum depends on:", a:"Mass", b:"Length", c:"Amplitude", d:"Material", answer:"B", explanation:"T = 2π√(l/g) depends on length."},
+    {q:32, subject:"Physics", question:"SI unit of magnetic flux:", a:"Weber", b:"Tesla", c:"Henry", d:"Gauss", answer:"A", explanation:"Magnetic flux unit is Weber."},
+    {q:33, subject:"Physics", question:"When frequency doubles, wavelength becomes:", a:"Double", b:"Half", c:"Same", d:"Zero", answer:"B", explanation:"v = fλ → λ inversely proportional to f."},
+    {q:34, subject:"Physics", question:"Potential energy of charge q at distance r:", a:"kq/r", b:"kq²/r", c:"kq/r²", d:"kr/q", answer:"A", explanation:"PE = kq/r for unit reference."},
+    {q:35, subject:"Chemistry", question:"Avogadro number:", a:"6.022×10²³", b:"3.011×10²³", c:"1×10²³", d:"9.1×10²³", answer:"A", explanation:"Standard Avogadro constant."},
+    {q:36, subject:"Chemistry", question:"Gas law PV=nRT valid for:", a:"Ideal gas", b:"Real gas", c:"Liquids", d:"Solids", answer:"A", explanation:"Equation applies to ideal gases."},
+    {q:37, subject:"Chemistry", question:"Which is reducing agent?", a:"O₂", b:"H₂", c:"Cl₂", d:"N₂", answer:"B", explanation:"H₂ donates electrons."},
+    {q:38, subject:"Chemistry", question:"Hardest natural substance:", a:"Gold", b:"Diamond", c:"Iron", d:"Graphite", answer:"B", explanation:"Diamond hardest allotrope."},
+    {q:39, subject:"Biology", question:"Basic unit of life:", a:"Cell", b:"Tissue", c:"Organ", d:"Organism", answer:"A", explanation:"Cell is structural and functional unit."},
+    {q:40, subject:"Biology", question:"Human heart chambers:", a:"2", b:"3", c:"4", d:"5", answer:"C", explanation:"Two atria and two ventricles."},
+    {q:41, subject:"Biology", question:"Carrier of heredity:", a:"Chromosome", b:"Enzyme", c:"Hormone", d:"Vitamin", answer:"A", explanation:"Chromosomes carry genes."},
+    {q:42, subject:"Physics", question:"Unit of power:", a:"Joule", b:"Watt", c:"Newton", d:"Pascal", answer:"B", explanation:"Power unit is Watt."},
+    {q:43, subject:"Physics", question:"Mirror formula is:", a:"1/f=1/v+1/u", b:"1/f=1/v-1/u", c:"f=u+v", d:"uv=f", answer:"B", explanation:"Standard mirror formula."},
+    {q:44, subject:"Chemistry", question:"p-block elements are in:", a:"Group 1-2", b:"Group 13-18", c:"Group 3-12", d:"Lanthanides", answer:"B", explanation:"p-block spans groups 13 to 18."},
+    {q:45, subject:"Chemistry", question:"Which is amphoteric oxide?", a:"Na₂O", b:"CO₂", c:"Al₂O₃", d:"SO₂", answer:"C", explanation:"Al₂O₃ reacts with acids and bases."},
+    {q:46, subject:"Biology", question:"RNA contains sugar:", a:"Deoxyribose", b:"Ribose", c:"Glucose", d:"Fructose", answer:"B", explanation:"RNA has ribose sugar."},
+    {q:47, subject:"Biology", question:"Process of water loss in plants:", a:"Respiration", b:"Transpiration", c:"Photosynthesis", d:"Guttation", answer:"B", explanation:"Transpiration is water loss via stomata."},
+    {q:48, subject:"Physics", question:"Speed of light in vacuum:", a:"3×10⁸ m/s", b:"3×10⁶ m/s", c:"3×10⁵ km/s", d:"Both A and C", answer:"D", explanation:"3×10⁸ m/s equals 3×10⁵ km/s."},
+    {q:49, subject:"Chemistry", question:"Atomic number equals:", a:"Protons", b:"Neutrons", c:"Electrons+Neutrons", d:"Mass number", answer:"A", explanation:"Atomic number is number of protons."},
+    {q:50, subject:"Biology", question:"Largest organ in human body:", a:"Heart", b:"Skin", c:"Liver", d:"Brain", answer:"B", explanation:"Skin is largest organ."}
+];
+
+const MARKS_CORRECT = 4;
+const MARKS_WRONG = -1;
+const STORAGE_KEY = 'neet_quiz_state';
+let userAnswers = {};
+let currentFilter = 'All';
+let testSubmitted = false;
+
+function saveState() {
+    const state = { userAnswers, currentFilter, testSubmitted };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadState() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const state = JSON.parse(saved);
+            userAnswers = state.userAnswers || {};
+            currentFilter = state.currentFilter || 'All';
+            testSubmitted = state.testSubmitted || false;
+        }
+    } catch(e) {}
+}
+
+function renderQuestions() {
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    quizData.forEach((item, idx) => {
+        if (currentFilter !== 'All' && item.subject !== currentFilter) return;
+
+        const subjectClass = item.subject.toLowerCase();
+        const answered = userAnswers[item.q] !== undefined;
+        const isCorrect = answered && userAnswers[item.q] === item.answer;
+        const cardClass = answered ? (isCorrect ? 'answered-correct' : 'answered-wrong') : '';
+
+        let optionsHTML = ['A','B','C','D'].map(opt => {
+            const key = opt.toLowerCase();
+            const text = item[key];
+            let btnClass = 'option-btn';
+            let icon = '';
+            if (answered) {
+                btnClass += ' disabled';
+                if (opt === item.answer) {
+                    btnClass += ' correct-answer';
+                    icon = ' ✓';
+                } else if (opt === userAnswers[item.q] && opt !== item.answer) {
+                    btnClass += ' wrong-answer';
+                    icon = ' ✗';
+                }
+            } else if (userAnswers[item.q] === opt) {
+                btnClass += ' selected';
+            }
+            return `<button class="${btnClass}" onclick="selectOption(${item.q}, '${opt}')" ${answered ? 'disabled' : ''}>
+                <span class="option-label">${opt}</span>
+                <span>${text}${icon}</span>
+            </button>`;
+        }).join('');
+
+        const explHTML = answered
+            ? `<div class="explanation show"><strong>${isCorrect ? '✓ Correct!' : '✗ Wrong!'}</strong> ${item.explanation}</div>`
+            : `<div class="explanation" id="expl-${item.q}"></div>`;
+
+        container.innerHTML += `
+        <div class="question-card ${cardClass}" id="card-${item.q}">
+            <div class="question-header">
+                <span class="question-number">Q${item.q} <span class="marks-badge">(4 marks)</span></span>
+                <span class="subject-badge ${subjectClass}">${item.subject}</span>
+            </div>
+            <div class="question-text">${item.question}</div>
+            <div class="options-grid">${optionsHTML}</div>
+            ${explHTML}
+        </div>`;
+    });
+}
+
+function selectOption(qNo, opt) {
+    if (userAnswers[qNo] !== undefined) return;
+    const item = quizData.find(d => d.q === qNo);
+    userAnswers[qNo] = opt;
+    saveState();
+    updateScore();
+    renderQuestions();
+    // Scroll back to the question
+    const card = document.getElementById(`card-${qNo}`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function updateScore() {
+    let correct = 0, wrong = 0, attempted = 0;
+    for (const qNo in userAnswers) {
+        attempted++;
+        const item = quizData.find(d => d.q === parseInt(qNo));
+        if (userAnswers[qNo] === item.answer) correct++;
+        else wrong++;
+    }
+    const unattempted = 50 - attempted;
+    const total = (correct * MARKS_CORRECT) + (wrong * MARKS_WRONG);
+
+    document.getElementById('scoreCorrect').textContent = `Correct: ${correct}`;
+    document.getElementById('scoreWrong').textContent = `Wrong: ${wrong}`;
+    document.getElementById('scoreUnattempted').textContent = `Unattempted: ${unattempted}`;
+    document.getElementById('scoreTotal').textContent = `Score: ${total} / 200`;
+    document.getElementById('progressBar').style.width = `${(attempted / 50) * 100}%`;
+}
+
+function submitTest() {
+    let correct = 0, wrong = 0, attempted = 0;
+    for (const qNo in userAnswers) {
+        attempted++;
+        const item = quizData.find(d => d.q === parseInt(qNo));
+        if (userAnswers[qNo] === item.answer) correct++;
+        else wrong++;
+    }
+    const unattempted = 50 - attempted;
+    const total = (correct * MARKS_CORRECT) + (wrong * MARKS_WRONG);
+
+    // Show all answers for unanswered questions
+    quizData.forEach(item => {
+        if (userAnswers[item.q] === undefined) {
+            userAnswers[item.q] = '__skipped__';
+        }
+    });
+
+    document.getElementById('modalCorrect').textContent = correct;
+    document.getElementById('modalWrong').textContent = wrong;
+    document.getElementById('modalAttempted').textContent = attempted;
+    document.getElementById('modalUnattempted').textContent = unattempted;
+    document.getElementById('modalTotal').textContent = total;
+
+    document.getElementById('resultModal').classList.add('show');
+
+    testSubmitted = true;
+    saveState();
+
+    // Re-render to show all answers
+    renderAllAnswered();
+    updateScore();
+}
+
+function renderAllAnswered() {
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    quizData.forEach(item => {
+        if (currentFilter !== 'All' && item.subject !== currentFilter) return;
+        const subjectClass = item.subject.toLowerCase();
+        const userAns = userAnswers[item.q];
+        const wasSkipped = userAns === '__skipped__';
+        const isCorrect = !wasSkipped && userAns === item.answer;
+        const isWrong = !wasSkipped && userAns !== item.answer;
+        const cardClass = wasSkipped ? '' : (isCorrect ? 'answered-correct' : 'answered-wrong');
+
+        let optionsHTML = ['A','B','C','D'].map(opt => {
+            const key = opt.toLowerCase();
+            const text = item[key];
+            let btnClass = 'option-btn disabled';
+            let icon = '';
+            if (opt === item.answer) {
+                btnClass += ' correct-answer';
+                icon = ' ✓';
+            } else if (!wasSkipped && opt === userAns && opt !== item.answer) {
+                btnClass += ' wrong-answer';
+                icon = ' ✗';
+            }
+            return `<button class="${btnClass}" disabled>
+                <span class="option-label">${opt}</span>
+                <span>${text}${icon}</span>
+            </button>`;
+        }).join('');
+
+        let resultText;
+        if (wasSkipped) resultText = '<strong>⊘ Not Attempted</strong>';
+        else if (isCorrect) resultText = '<strong>✓ Correct! (+4)</strong>';
+        else resultText = `<strong>✗ Wrong! (-1) — You chose: ${userAns}</strong>`;
+
+        container.innerHTML += `
+        <div class="question-card ${cardClass}" id="card-${item.q}">
+            <div class="question-header">
+                <span class="question-number">Q${item.q} <span class="marks-badge">(4 marks)</span></span>
+                <span class="subject-badge ${subjectClass}">${item.subject}</span>
+            </div>
+            <div class="question-text">${item.question}</div>
+            <div class="options-grid">${optionsHTML}</div>
+            <div class="explanation show">${resultText} ${item.explanation}</div>
+        </div>`;
+    });
+}
+
+function closeModal() {
+    document.getElementById('resultModal').classList.remove('show');
+}
+
+function resetTest() {
+    if (!confirm('Are you sure you want to reset the test? All answers will be cleared.')) return;
+    userAnswers = {};
+    testSubmitted = false;
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    updateScore();
+    renderQuestions();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function filterSubject(subject) {
+    currentFilter = subject;
+    document.querySelectorAll('.subject-filter button').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(subject) || (subject === 'All' && btn.textContent.includes('All')));
+    });
+    renderQuestions();
+}
+
+// Load saved state and render
+loadState();
+
+// Restore filter button active state
+document.querySelectorAll('.subject-filter button').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.includes(currentFilter) || (currentFilter === 'All' && btn.textContent.includes('All')));
+});
+
+if (testSubmitted) {
+    renderAllAnswered();
+} else {
+    renderQuestions();
+}
+updateScore();
+</script>
+
+</body>
+</html>
