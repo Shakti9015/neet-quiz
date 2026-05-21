@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maths Quiz - CBSE Class 2-4 | Multiplayer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #ede7f6);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Registration Screen */
+        .register-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px;
+        }
+        .register-box {
+            background: white; border-radius: 20px; padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12); max-width: 500px; width: 100%; text-align: center;
+        }
+        .register-box h1 { font-size: 2rem; color: #1565c0; margin-bottom: 6px; }
+        .register-box .subtitle { color: #666; margin-bottom: 30px; font-size: 0.95rem; }
+        .register-box label { display: block; text-align: left; font-weight: 600; margin-bottom: 6px; color: #444; font-size: 0.95rem; }
+        .register-box input {
+            width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 10px;
+            font-size: 1rem; margin-bottom: 18px; transition: border-color 0.3s; outline: none;
+        }
+        .register-box input:focus { border-color: #1565c0; }
+        .btn-start {
+            background: linear-gradient(135deg, #1e88e5, #1565c0); color: white; border: none;
+            padding: 14px 40px; font-size: 1.1rem; border-radius: 12px; cursor: pointer;
+            font-weight: 700; margin-top: 10px; transition: transform 0.2s, box-shadow 0.2s; width: 100%;
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(21,101,192,0.3); }
+        .badge { display: inline-block; background: #e3f2fd; color: #1565c0; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; }
+
+        /* Quiz Screen */
+        .quiz-screen { display: none; }
+
+        /* Header / Leaderboard */
+        .header {
+            background: linear-gradient(135deg, #1565c0, #0d47a1); color: white;
+            padding: 14px 24px; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 960px; margin: 0 auto; flex-wrap: wrap; gap: 8px; }
+        .header h1 { font-size: 1.2rem; }
+        .q-counter { background: rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; }
+
+        .leaderboard {
+            max-width: 960px; margin: 8px auto 0; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+        }
+        .lb-card {
+            background: rgba(255,255,255,0.15); border-radius: 12px; padding: 8px 18px;
+            display: flex; align-items: center; gap: 10px; min-width: 180px; transition: all 0.4s ease;
+        }
+        .lb-card.rank-1 { background: rgba(255,215,0,0.3); order: -1; }
+        .lb-card.rank-2 { background: rgba(192,192,192,0.25); }
+        .lb-card.rank-3 { background: rgba(205,127,50,0.2); }
+        .lb-rank { font-size: 1.4rem; }
+        .lb-info { display: flex; flex-direction: column; }
+        .lb-name { font-weight: 700; font-size: 0.95rem; }
+        .lb-score { font-size: 0.85rem; opacity: 0.9; }
+
+        .progress-bar-container { max-width: 960px; margin: 10px auto 0; background: rgba(255,255,255,0.15); border-radius: 10px; height: 6px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #76ff03; border-radius: 10px; transition: width 0.4s ease; }
+
+        /* Question Area */
+        .container { max-width: 960px; margin: 20px auto; padding: 0 16px 120px; }
+
+        .question-card {
+            background: white; border-radius: 16px; padding: 28px; margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 5px solid #1e88e5;
+        }
+        .question-meta { margin-bottom: 12px; }
+        .question-num { display: inline-block; background: #e3f2fd; color: #1565c0; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.85rem; }
+        .question-class { display: inline-block; background: #fff3e0; color: #e65100; font-weight: 600; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; margin-left: 8px; }
+        .question-difficulty { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; margin-left: 8px; }
+        .diff-medium { background: #fff9c4; color: #f57f17; }
+        .diff-hard { background: #ffcdd2; color: #c62828; }
+        .question-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 20px; line-height: 1.5; color: #222; }
+
+        /* Player Answer Columns */
+        .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 700px) { .players-grid { grid-template-columns: 1fr; } }
+        .player-col {
+            border: 2px solid #e0e0e0; border-radius: 14px; padding: 14px; background: #fafafa;
+        }
+        .player-col-header {
+            text-align: center; font-weight: 700; font-size: 0.95rem; margin-bottom: 10px;
+            padding-bottom: 8px; border-bottom: 2px solid #e3f2fd; color: #1565c0;
+        }
+        .option-btn {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            border: 2px solid #e0e0e0; border-radius: 10px; background: white;
+            cursor: pointer; transition: all 0.2s; font-size: 0.9rem; margin-bottom: 8px; text-align: left;
+        }
+        .option-btn:last-child { margin-bottom: 0; }
+        .option-btn:hover { border-color: #1e88e5; background: #e3f2fd; }
+        .option-btn.selected { border-color: #1e88e5; background: #bbdefb; font-weight: 600; }
+        .option-letter {
+            width: 28px; height: 28px; background: #e0e0e0; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85rem; color: #555; flex-shrink: 0;
+        }
+        .option-btn.selected .option-letter { background: #1e88e5; color: white; }
+
+        /* Revealed answer states */
+        .option-btn.revealed-correct { border-color: #2e7d32; background: #c8e6c9; }
+        .option-btn.revealed-correct .option-letter { background: #2e7d32; color: white; }
+        .option-btn.revealed-wrong { border-color: #c62828; background: #ffcdd2; }
+        .option-btn.revealed-wrong .option-letter { background: #c62828; color: white; }
+        .option-btn.locked { pointer-events: none; opacity: 0.92; }
+        .answer-banner {
+            margin-top: 16px; padding: 14px 20px; border-radius: 12px; text-align: center;
+            font-weight: 700; font-size: 1rem; animation: fadeIn 0.4s ease;
+        }
+        .answer-banner.correct-banner { background: #c8e6c9; color: #1b5e20; border: 2px solid #43a047; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            padding: 12px 24px; box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+            display: flex; justify-content: center; gap: 12px; z-index: 100; flex-wrap: wrap;
+        }
+        .btn-nav {
+            padding: 12px 30px; font-size: 1rem; border-radius: 12px; cursor: pointer;
+            font-weight: 700; transition: transform 0.2s, box-shadow 0.2s; border: none;
+        }
+        .btn-prev { background: #e0e0e0; color: #555; }
+        .btn-prev:hover { background: #bdbdbd; }
+        .btn-next { background: linear-gradient(135deg, #1e88e5, #1565c0); color: white; }
+        .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(21,101,192,0.3); }
+        .btn-finish { background: linear-gradient(135deg, #e65100, #bf360c); color: white; }
+        .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(191,54,12,0.3); }
+
+        /* Question Dots */
+        .q-dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; max-width: 960px; margin-left: auto; margin-right: auto; }
+        .q-dot {
+            width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.6rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .q-dot.answered { background: rgba(118,255,3,0.4); }
+        .q-dot.current { background: white; color: #0d47a1; transform: scale(1.2); }
+
+        /* Results Screen */
+        .results-screen { display: none; min-height: 100vh; padding: 20px; }
+        .results-container { max-width: 960px; margin: 0 auto; }
+        .results-header {
+            text-align: center; background: linear-gradient(135deg, #1565c0, #0d47a1);
+            color: white; padding: 30px; border-radius: 20px; margin-bottom: 24px;
+        }
+        .results-header h1 { font-size: 2rem; margin-bottom: 6px; }
+        .trophy { font-size: 3rem; margin-bottom: 10px; }
+
+        .scoreboard {
+            background: white; border-radius: 16px; padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 24px;
+        }
+        .scoreboard h2 { color: #1565c0; margin-bottom: 16px; font-size: 1.4rem; text-align: center; }
+        .score-table { width: 100%; border-collapse: collapse; }
+        .score-table th { background: #e3f2fd; color: #1565c0; padding: 12px 16px; text-align: left; font-size: 0.95rem; }
+        .score-table td { padding: 12px 16px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .score-table tr:last-child td { border-bottom: none; }
+        .rank-1-row { background: #fff8e1; }
+        .rank-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 50%; font-weight: 700; font-size: 0.9rem;
+        }
+        .rank-badge.gold { background: #ffd54f; color: #5d4037; }
+        .rank-badge.silver { background: #e0e0e0; color: #424242; }
+        .rank-badge.bronze { background: #ffcc80; color: #5d4037; }
+
+        .detail-card {
+            background: white; border-radius: 16px; padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px;
+        }
+        .detail-card h3 { color: #1565c0; margin-bottom: 16px; }
+        .ans-correct { color: #2e7d32; font-weight: 600; }
+        .ans-wrong { color: #c62828; font-weight: 600; }
+        .ans-skip { color: #9e9e9e; font-style: italic; }
+
+        .btn-restart {
+            display: block; margin: 20px auto; background: linear-gradient(135deg, #1e88e5, #1565c0);
+            color: white; border: none; padding: 14px 40px; font-size: 1.1rem;
+            border-radius: 12px; cursor: pointer; font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+            .register-box { padding: 24px; }
+            .header h1 { font-size: 1rem; }
+            .question-text { font-size: 1rem; }
+            .lb-card { min-width: 100px; padding: 6px 12px; }
+            .lb-name { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- REGISTRATION SCREEN -->
+<div class="register-screen" id="registerScreen">
+    <div class="register-box">
+        <div class="badge">CBSE Maths &bull; Class 2-4</div>
+        <h1>&#x1F4D0; Maths Quiz</h1>
+        <p class="subtitle">50 MCQs &bull; Medium to Hard &bull; 3 Players &bull; Simultaneous Play</p>
+        <br>
+        <label for="player1">&#128100; Player 1 Name</label>
+        <input type="text" id="player1" placeholder="Enter Player 1 name" maxlength="20">
+        <label for="player2">&#128100; Player 2 Name</label>
+        <input type="text" id="player2" placeholder="Enter Player 2 name" maxlength="20">
+        <label for="player3">&#128100; Player 3 Name</label>
+        <input type="text" id="player3" placeholder="Enter Player 3 name" maxlength="20">
+        <button class="btn-start" onclick="startQuiz()">Start Quiz &#8594;</button>
+    </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="quiz-screen" id="quizScreen">
+    <div class="header">
+        <div class="header-top">
+            <h1>&#x1F4D0; Maths Quiz</h1>
+            <div class="q-counter" id="qCounter">Q 1 / 50</div>
+        </div>
+        <div class="leaderboard" id="leaderboard"></div>
+        <div class="q-dots" id="qDots"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+    </div>
+    <div class="container" id="questionArea"></div>
+    <div class="bottom-bar">
+        <button class="btn-nav btn-prev" id="prevBtn" onclick="navigate(-1)">&#8592; Previous</button>
+        <button class="btn-nav btn-next" id="nextBtn" onclick="navigate(1)">Next &#8594;</button>
+        <button class="btn-nav btn-finish" id="finishBtn" onclick="finishQuiz()" style="display:none;">&#127937; Finish Quiz</button>
+    </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="results-screen" id="resultsScreen">
+    <div class="results-container" id="resultsContainer"></div>
+</div>
+
+<script>
+// ============ 50 MATHS MCQs (CBSE Class 2-4, Medium to Hard) ============
+const questions = [
+    // CLASS 2 (Q1-16)
+    { id:1, q:"What is 48 + 37?", options:["75","85","95","84"], answer:1, cls:2, diff:"Medium" },
+    { id:2, q:"What is 93 - 46?", options:["57","47","53","43"], answer:1, cls:2, diff:"Medium" },
+    { id:3, q:"Which number comes just after 199?", options:["198","200","201","299"], answer:1, cls:2, diff:"Medium" },
+    { id:4, q:"How many tens are there in 70?", options:["70","17","7","10"], answer:2, cls:2, diff:"Medium" },
+    { id:5, q:"What is the place value of 5 in 356?", options:["5","50","500","55"], answer:1, cls:2, diff:"Hard" },
+    { id:6, q:"A bag has 24 red balls and 38 blue balls. How many balls in total?", options:["52","62","72","58"], answer:1, cls:2, diff:"Medium" },
+    { id:7, q:"Which of these is an even number?", options:["13","27","46","51"], answer:2, cls:2, diff:"Medium" },
+    { id:8, q:"What is 6 + 6 + 6 + 6?", options:["18","22","24","30"], answer:2, cls:2, diff:"Medium" },
+    { id:9, q:"How many sides does a rectangle have?", options:["3","4","5","6"], answer:1, cls:2, diff:"Medium" },
+    { id:10, q:"Which is the smallest: 312, 213, 132, 321?", options:["312","213","132","321"], answer:2, cls:2, diff:"Hard" },
+    { id:11, q:"What time is it when the hour hand is on 3 and the minute hand is on 12?", options:["12:03","3:12","3:00","12:30"], answer:2, cls:2, diff:"Medium" },
+    { id:12, q:"Riya has 45 stickers. She gives 18 to her friend. How many does she have now?", options:["27","37","23","33"], answer:0, cls:2, diff:"Medium" },
+    { id:13, q:"What is the next number in the pattern: 5, 10, 15, 20, __?", options:["22","30","25","35"], answer:2, cls:2, diff:"Medium" },
+    { id:14, q:"Which coin do you need 2 of to make 1 rupee?", options:["25 paise","50 paise","10 paise","20 paise"], answer:1, cls:2, diff:"Hard" },
+    { id:15, q:"72 - __ = 38. What is the missing number?", options:["44","34","24","36"], answer:1, cls:2, diff:"Hard" },
+    { id:16, q:"How many corners does a triangle have?", options:["2","3","4","0"], answer:1, cls:2, diff:"Medium" },
+
+    // CLASS 3 (Q17-34)
+    { id:17, q:"What is 246 + 389?", options:["625","635","645","535"], answer:1, cls:3, diff:"Medium" },
+    { id:18, q:"What is 800 - 357?", options:["453","443","543","433"], answer:1, cls:3, diff:"Medium" },
+    { id:19, q:"What is 7 &times; 8?", options:["54","48","56","63"], answer:2, cls:3, diff:"Medium" },
+    { id:20, q:"What is 63 &divide; 9?", options:["8","6","7","9"], answer:2, cls:3, diff:"Medium" },
+    { id:21, q:"Which fraction is bigger: 1/2 or 1/4?", options:["1/4","Both are equal","1/2","Cannot tell"], answer:2, cls:3, diff:"Medium" },
+    { id:22, q:"How many millimetres are in 1 centimetre?", options:["100","1000","10","1"], answer:2, cls:3, diff:"Medium" },
+    { id:23, q:"What is the perimeter of a square with side 9 cm?", options:["27 cm","18 cm","36 cm","81 cm"], answer:2, cls:3, diff:"Medium" },
+    { id:24, q:"A shopkeeper has 8 boxes. Each box has 12 pencils. How many pencils in total?", options:["86","92","96","108"], answer:2, cls:3, diff:"Medium" },
+    { id:25, q:"Round 467 to the nearest hundred.", options:["400","470","500","460"], answer:2, cls:3, diff:"Hard" },
+    { id:26, q:"What is the Roman numeral for 40?", options:["XXXX","XL","VL","IV"], answer:1, cls:3, diff:"Hard" },
+    { id:27, q:"If today is Wednesday, what day will it be after 10 days?", options:["Friday","Saturday","Sunday","Monday"], answer:1, cls:3, diff:"Hard" },
+    { id:28, q:"What is 1/4 of 36?", options:["6","8","9","12"], answer:2, cls:3, diff:"Hard" },
+    { id:29, q:"Which of the following is NOT a line of symmetry shape?", options:["Circle","Square","Rectangle","Scalene triangle"], answer:3, cls:3, diff:"Hard" },
+    { id:30, q:"What number should replace ?: 5 &times; ? = 45", options:["7","8","9","10"], answer:2, cls:3, diff:"Medium" },
+    { id:31, q:"A train departs at 9:45 AM and arrives at 12:15 PM. How long is the journey?", options:["2 hours 15 min","2 hours 30 min","3 hours","3 hours 30 min"], answer:1, cls:3, diff:"Hard" },
+    { id:32, q:"How many edges does a cube have?", options:["6","8","10","12"], answer:3, cls:3, diff:"Hard" },
+    { id:33, q:"Which is heavier: 2 kg or 1500 g?", options:["2 kg","1500 g","Both are equal","Cannot compare"], answer:0, cls:3, diff:"Medium" },
+    { id:34, q:"What comes next: 2, 6, 18, 54, __?", options:["108","162","72","96"], answer:1, cls:3, diff:"Hard" },
+
+    // CLASS 4 (Q35-50)
+    { id:35, q:"What is 4856 + 3697?", options:["8543","8453","8553","8653"], answer:2, cls:4, diff:"Medium" },
+    { id:36, q:"What is 7003 - 4568?", options:["2435","2535","2345","2445"], answer:0, cls:4, diff:"Medium" },
+    { id:37, q:"What is 236 &times; 14?", options:["3204","3304","3104","3404"], answer:1, cls:4, diff:"Medium" },
+    { id:38, q:"What is 1728 &divide; 12?", options:["134","144","154","124"], answer:1, cls:4, diff:"Medium" },
+    { id:39, q:"What is the LCM of 6 and 8?", options:["48","12","24","36"], answer:2, cls:4, diff:"Hard" },
+    { id:40, q:"What is the HCF of 18 and 24?", options:["4","6","8","12"], answer:1, cls:4, diff:"Hard" },
+    { id:41, q:"Convert 3/5 to a decimal.", options:["0.35","0.5","0.6","0.53"], answer:2, cls:4, diff:"Hard" },
+    { id:42, q:"What is the area of a rectangle with length 12 cm and breadth 7 cm?", options:["38 sq cm","74 sq cm","84 sq cm","19 sq cm"], answer:2, cls:4, diff:"Medium" },
+    { id:43, q:"A pizza is cut into 8 equal slices. Rohan eats 3 slices. What fraction is left?", options:["3/8","5/8","4/8","6/8"], answer:1, cls:4, diff:"Medium" },
+    { id:44, q:"What is 2/3 + 1/6?", options:["3/6","3/9","5/6","4/6"], answer:2, cls:4, diff:"Hard" },
+    { id:45, q:"A number is divisible by both 3 and 4. Which of these could it be?", options:["18","20","24","22"], answer:2, cls:4, diff:"Hard" },
+    { id:46, q:"How many lines of symmetry does a regular hexagon have?", options:["2","4","6","8"], answer:2, cls:4, diff:"Hard" },
+    { id:47, q:"What is the value of: (25 + 15) &times; 3 - 40?", options:["80","70","60","50"], answer:0, cls:4, diff:"Hard" },
+    { id:48, q:"A car travels 240 km in 4 hours. What is its speed?", options:["50 km/h","55 km/h","60 km/h","65 km/h"], answer:2, cls:4, diff:"Medium" },
+    { id:49, q:"Which of the following is a prime number?", options:["27","33","37","39"], answer:2, cls:4, diff:"Medium" },
+    { id:50, q:"The sum of angles in a triangle is:", options:["90&deg;","180&deg;","270&deg;","360&deg;"], answer:1, cls:4, diff:"Hard" }
+];
+
+// ============ GAME STATE ============
+let players = [];
+let playerAnswers = {};
+let currentQ = 0;
+
+// ============ START QUIZ ============
+function startQuiz() {
+    const p1 = document.getElementById('player1').value.trim() || 'Player 1';
+    const p2 = document.getElementById('player2').value.trim() || 'Player 2';
+    const p3 = document.getElementById('player3').value.trim() || 'Player 3';
+    players = [p1, p2, p3];
+    if (new Set(players).size < 3) { alert('Please enter unique names for all three players!'); return; }
+    players.forEach(function(p) { playerAnswers[p] = new Array(questions.length).fill(null); });
+    document.getElementById('registerScreen').style.display = 'none';
+    document.getElementById('quizScreen').style.display = 'block';
+    buildDots();
+    renderQuestion();
+}
+
+// ============ BUILD QUESTION DOTS ============
+function buildDots() {
+    var dotsEl = document.getElementById('qDots');
+    var html = '';
+    for (var i = 0; i < questions.length; i++) {
+        html += '<div class="q-dot" id="dot-' + i + '" onclick="jumpTo(' + i + ')" title="Q' + (i+1) + '">' + (i+1) + '</div>';
+    }
+    dotsEl.innerHTML = html;
+}
+
+// ============ UPDATE DOTS ============
+function updateDots() {
+    for (var i = 0; i < questions.length; i++) {
+        var dot = document.getElementById('dot-' + i);
+        dot.classList.remove('current', 'answered');
+        if (i === currentQ) { dot.classList.add('current'); }
+        else {
+            var anyAnswered = players.some(function(p) { return playerAnswers[p][i] !== null; });
+            if (anyAnswered) dot.classList.add('answered');
+        }
+    }
+}
+
+// ============ UPDATE LEADERBOARD ============
+function updateLeaderboard() {
+    var scores = players.map(function(p) {
+        var score = 0;
+        playerAnswers[p].forEach(function(ans, idx) { if (ans === questions[idx].answer) score++; });
+        return { name: p, score: score };
+    });
+    scores.sort(function(a, b) { return b.score - a.score; });
+    var emojis = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+    var rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+    var html = '';
+    scores.forEach(function(s, i) {
+        html += '<div class="lb-card ' + rankClasses[i] + '">' +
+            '<span class="lb-rank">' + emojis[i] + '</span>' +
+            '<div class="lb-info">' +
+            '<span class="lb-name">' + s.name + '</span>' +
+            '<span class="lb-score">' + s.score + ' / ' + questions.length + ' pts</span>' +
+            '</div></div>';
+    });
+    document.getElementById('leaderboard').innerHTML = html;
+}
+
+// ============ CHECK IF ALL ANSWERED ============
+function allAnswered(qIdx) {
+    return players.every(function(p) { return playerAnswers[p][qIdx] !== null; });
+}
+
+// ============ RENDER CURRENT QUESTION ============
+function renderQuestion() {
+    var q = questions[currentQ];
+    var letters = ['A', 'B', 'C', 'D'];
+    var diffClass = q.diff === 'Hard' ? 'diff-hard' : 'diff-medium';
+    var revealed = allAnswered(currentQ);
+    document.getElementById('qCounter').textContent = 'Q ' + (currentQ + 1) + ' / ' + questions.length;
+    document.getElementById('progressBar').style.width = ((currentQ + 1) / questions.length * 100) + '%';
+
+    var html = '<div class="question-card"><div class="question-meta">' +
+        '<span class="question-num">Q' + q.id + '</span>' +
+        '<span class="question-class">Class ' + q.cls + '</span>' +
+        '<span class="question-difficulty ' + diffClass + '">' + q.diff + '</span></div>' +
+        '<p class="question-text">' + q.q + '</p>' +
+        '<div class="players-grid">';
+
+    players.forEach(function(player, pi) {
+        var playerAns = playerAnswers[player][currentQ];
+        html += '<div class="player-col"><div class="player-col-header">\u{1F464} ' + player + '</div>';
+        q.options.forEach(function(opt, oi) {
+            var classes = 'option-btn';
+            if (playerAns === oi) classes += ' selected';
+            if (revealed) {
+                classes += ' locked';
+                if (oi === q.answer) classes += ' revealed-correct';
+                else if (playerAns === oi && oi !== q.answer) classes += ' revealed-wrong';
+            }
+            var clickAttr = revealed ? '' : ' onclick="selectOption(' + pi + ',' + oi + ')"';
+            html += '<div class="' + classes + '"' + clickAttr + '>' +
+                '<span class="option-letter">' + letters[oi] + '</span>' +
+                '<span>' + opt + (revealed && oi === q.answer ? ' \u2713' : '') + '</span></div>';
+        });
+        html += '</div>';
+    });
+
+    html += '</div>';
+
+    if (revealed) {
+        html += '<div class="answer-banner correct-banner">\u2705 Correct Answer: ' +
+            letters[q.answer] + '. ' + q.options[q.answer] + '</div>';
+    } else {
+        var remaining = players.filter(function(p) { return playerAnswers[p][currentQ] === null; });
+        html += '<div style="text-align:center;margin-top:12px;color:#888;font-size:0.9rem;">Waiting for: ' +
+            remaining.join(', ') + '</div>';
+    }
+
+    html += '</div>';
+    document.getElementById('questionArea').innerHTML = html;
+
+    document.getElementById('prevBtn').style.display = currentQ === 0 ? 'none' : '';
+    if (currentQ === questions.length - 1) {
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('finishBtn').style.display = '';
+    } else {
+        document.getElementById('nextBtn').style.display = '';
+        document.getElementById('finishBtn').style.display = 'none';
+    }
+    updateDots();
+    updateLeaderboard();
+}
+
+// ============ SELECT OPTION ============
+function selectOption(playerIndex, optIndex) {
+    var player = players[playerIndex];
+    playerAnswers[player][currentQ] = optIndex;
+    renderQuestion();
+}
+
+// ============ NAVIGATE ============
+function navigate(dir) {
+    var next = currentQ + dir;
+    if (next < 0 || next >= questions.length) return;
+    currentQ = next;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function jumpTo(idx) {
+    currentQ = idx;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============ FINISH QUIZ ============
+function finishQuiz() {
+    var totalAnswered = 0;
+    players.forEach(function(p) { totalAnswered += playerAnswers[p].filter(function(a) { return a !== null; }).length; });
+    var totalPossible = players.length * questions.length;
+    if (totalAnswered < totalPossible) {
+        if (!confirm('Not all questions are answered by all players.\n' + totalAnswered + ' of ' + totalPossible + ' total answers recorded.\n\nUnanswered = 0 marks. Submit anyway?')) return;
+    }
+    showResults();
+}
+
+// ============ CALCULATE SCORE ============
+function calcScore(player) {
+    var correct = 0, wrong = 0, skipped = 0;
+    questions.forEach(function(q, idx) {
+        var ans = playerAnswers[player][idx];
+        if (ans === null) skipped++;
+        else if (ans === q.answer) correct++;
+        else wrong++;
+    });
+    return { correct: correct, wrong: wrong, skipped: skipped, total: correct };
+}
+
+// ============ SHOW RESULTS ============
+function showResults() {
+    document.getElementById('quizScreen').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'block';
+
+    var scores = players.map(function(p) {
+        var s = calcScore(p);
+        return { name: p, correct: s.correct, wrong: s.wrong, skipped: s.skipped, total: s.total };
+    });
+    scores.sort(function(a, b) { return b.total - a.total || a.wrong - b.wrong; });
+
+    var rankColors = ['gold', 'silver', 'bronze'];
+    var rankEmojis = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+    var letters = ['A', 'B', 'C', 'D'];
+
+    var html = '<div class="results-header"><div class="trophy">\u{1F3C6}</div>' +
+        '<h1>Maths Quiz Results</h1><p>50 Questions &bull; CBSE Maths &bull; Class 2-4</p></div>';
+
+    html += '<div class="scoreboard"><h2>\u{1F3C5} Final Scoreboard</h2>' +
+        '<table class="score-table"><thead><tr><th>Rank</th><th>Player</th><th>Correct</th><th>Wrong</th><th>Skipped</th><th>Score</th></tr></thead><tbody>';
+    scores.forEach(function(s, i) {
+        html += '<tr class="' + (i === 0 ? 'rank-1-row' : '') + '">' +
+            '<td><span class="rank-badge ' + rankColors[i] + '">' + (i+1) + '</span></td>' +
+            '<td><strong>' + rankEmojis[i] + ' ' + s.name + '</strong></td>' +
+            '<td style="color:#2e7d32;font-weight:600;">' + s.correct + '</td>' +
+            '<td style="color:#c62828;font-weight:600;">' + s.wrong + '</td>' +
+            '<td style="color:#9e9e9e;">' + s.skipped + '</td>' +
+            '<td><strong>' + s.total + ' / 50</strong></td></tr>';
+    });
+    html += '</tbody></table></div>';
+
+    html += '<div class="scoreboard"><h2>\u{1F4CA} Score Comparison</h2><div style="padding:10px 0;">';
+    scores.forEach(function(s, i) {
+        html += '<div style="margin-bottom:14px;">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+            '<strong>' + rankEmojis[i] + ' ' + s.name + '</strong>' +
+            '<span style="font-weight:600;color:#1565c0;">' + s.total + '/50 (' + (s.total * 2) + '%)</span></div>' +
+            '<div style="background:#e0e0e0;border-radius:10px;height:24px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + (s.total * 2) + '%;background:linear-gradient(90deg,#1e88e5,#42a5f5);border-radius:10px;transition:width 1s ease;display:flex;align-items:center;justify-content:center;color:white;font-size:0.8rem;font-weight:700;">' +
+            (s.total > 2 ? s.total + '/50' : '') + '</div></div></div>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="detail-card"><h3>\u{1F4DD} Answer Key & Player Responses</h3><div style="overflow-x:auto;">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:0.88rem;">' +
+        '<thead><tr style="background:#e3f2fd;"><th style="padding:8px;text-align:left;">Q#</th>' +
+        '<th style="padding:8px;text-align:left;">Class</th><th style="padding:8px;text-align:left;">Correct Answer</th>';
+    players.forEach(function(p) { html += '<th style="padding:8px;text-align:left;">' + p + '</th>'; });
+    html += '</tr></thead><tbody>';
+
+    questions.forEach(function(q, idx) {
+        html += '<tr style="border-bottom:1px solid #f0f0f0;">' +
+            '<td style="padding:8px;font-weight:700;">Q' + q.id + '</td>' +
+            '<td style="padding:8px;">Class ' + q.cls + '</td>' +
+            '<td style="padding:8px;color:#2e7d32;font-weight:600;">' + letters[q.answer] + '. ' + q.options[q.answer] + '</td>';
+        players.forEach(function(p) {
+            var pAns = playerAnswers[p][idx];
+            if (pAns === null) { html += '<td style="padding:8px;" class="ans-skip">\u2014</td>'; }
+            else {
+                var isCorrect = pAns === q.answer;
+                html += '<td style="padding:8px;" class="' + (isCorrect ? 'ans-correct' : 'ans-wrong') + '">' +
+                    letters[pAns] + (isCorrect ? ' \u2713' : ' \u2717') + '</td>';
+            }
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+
+    html += '<button class="btn-restart" onclick="location.reload()">\u{1F504} Play Again</button>';
+
+    document.getElementById('resultsContainer').innerHTML = html;
+    window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
